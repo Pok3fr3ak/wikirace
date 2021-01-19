@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registering...</title>
+    <style>
+        body{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            width: 90vw;
+            height: 90vh;
+        }
+
+        .usercredentials{
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .usercredentials div{
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+
+        }
+
+        button{
+            margin: 0.5em 1em 0.2em;
+            padding: 0.5em 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="usercredentials">
+        <div>
+            <label for="username">Username: </label>
+            <input type="text" name="username" id="username">
+        </div>
+
+
+        <button id="join">Lobby Beitreten</button>
+    </div>
+</body>
+
+<script>
+    (function () {
+        let id = window.location.pathname.split('/game/').splice(1,1)[0];
+        console.log(id);
+        localStorage.setItem('wikirace-id', `${id}`)
+
+        document.querySelector('button#join').addEventListener('click', (ev)=>{
+            localStorage.setItem("wikirace-username", document.querySelector('div.usercredentials input#username').value);
+            window.location.pathname = '/'; 
+        })
+
+    })()
+</script>
+
+</html>

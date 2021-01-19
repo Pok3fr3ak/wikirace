@@ -1,0 +1,16 @@
+{
+  "name": "wikirace",
+  "version": "1.0.0",
+  "description": "A Wikirace Application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pok3freak",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
+    "socket.io": "^3.1.0"
+  }
+}

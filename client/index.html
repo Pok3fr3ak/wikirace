@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikirace</title>
+    <style>body {
+        background-color: white !important;
+        margin: 1em !important;
+      }
+      
+      #pageContent {
+        width: 80%;
+        background-color: white;
+      }
+      
+      main {
+        display: flex;
+        position: relative;
+      }
+      
+      aside {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 20%;
+        height: 100vh;
+      }
+      aside div.statusBar {
+        padding: 2em;
+      }
+      
+      .individual header {
+        width: 80%;
+      }
+      .individual .lobbyScreen {
+        position: absolute;
+        z-index: 1000;
+        width: 100vw;
+        height: 100vh;
+        background-color: white;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .individual .lobbyScreen ul {
+        list-style: none;
+        margin: 0;
+      }
+      .individual .lobbyScreen ul li.user {
+        border: 1px solid black;
+        border-radius: 10px;
+        padding: 0.5em 2em;
+        margin: 0.5em 1em;
+        text-align: center;
+      }
+      .individual .lobbyScreen button {
+        padding: 0.5em 2em;
+        margin-top: 2em;
+      }
+      .individual h1 {
+        border: none;
+      }
+      .individual p.instruction {
+        font-size: 1.2em;
+        font-weight: 700;
+      }
+      .individual.centerAll {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100vh;
+      }
+      .individual.startMenu {
+        display: flex;
+        flex-direction: column;
+        min-width: 250px;
+      }
+      .individual.startMenu button {
+        margin: 0.5em 1.5em;
+        padding: 0.5em;
+      }
+      .individual.startMenu #usercredentials {
+        display: flex;
+        flex-direction: column;
+        margin-top: 1.5em;
+      }
+      .individual.startMenu #usercredentials div {
+        margin-bottom: 0.5em;
+      }
+      
+      .hidden {
+        display: none !important;
+      }
+      
+      /*# sourceMappingURL=style.css.map */
+       </style>
+    <link rel="stylesheet"
+        href="https://de.wikipedia.org/w/load.php?debug=false&lang=en&modules=site.styles|skins.vector.styles|mediawiki.legacy.commonPrint%2Cshared&only=styles&skin=vector&*">
+</head>
+
+<body>
+    <header class="individual">
+        <h1>Wikirace</h1>
+    </header>
+
+    <div class="individual centerAll">
+        <div class="startMenu individual">
+            <button id="training">Training</button>
+            <button id="playWithFriends">Spiel doch mit Freunden</button>
+            <div id="usercredentials" class="hidden">
+                <div>
+                    <label for="username">Username: </label>
+                    <input type="text" name="username" id="username" required>
+                </div>
+                <button id="confirmUsername">Les Play</button>
+            </div>
+        </div>
+    
+        <div class="individual lobbyScreen hidden">
+            <p class="lobbyInvite">
+                Hier is der Link zum Inviten
+            </p>
+    
+            <ul class="members">
+            </ul>
+            <button id="ready">Bereit</button>
+        </div>
+    </div>
+    
+
+    <main>
+        <div id="pageContent" class="mw-body-content">
+
+        </div>
+
+        <aside class="individual">
+            <div class="statusBar">
+                <header>
+                    <div id="test"></div>
+                    <h1 id="clock"></h1>
+                </header>
+            </div>
+
+        </aside>
+    </main>
+
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    let GOAL;
+    let PATH = [];
+    let sec;
+    const lobbyScreen = document.querySelector('div.individual.lobbyscreen');
+    let options = {
+        lang: 'de'
+    };
+
+    /*-----------------------------------------------------------------
+    Functions & Stuff
+    -----------------------------------------------------------------*/
+
+    async function getSite(pageName) {
+        let step = decodeURIComponent(pageName);
+        let page = encodeURI(step);
+        let data = await fetch(`https://${options.lang}.wikipedia.org/w/api.php?action=parse&format=json&page=${page}&prop=text&formatversion=2&origin=*`).then(response => response.json()).then(data => data);
+
+        return data;
+    }
+
+    function extractLink(href) {
+        if (!href.includes('/')) {
+            scrollToView(href);
+        } else {
+            let parts = href.split('/');
+            parts.splice(0, 2);
+            let pageLinks = parts.join().split('#');
+            if (pageLinks.length > 1) {
+                pageLinks.splice(1, 1);
+                parts = pageLinks;
+            }
+            parts.join();
+            return parts;
+        }
+    }
+
+    function parse(parserOutput) {
+        let content = parserOutput.parse.text;
+
+        document.querySelector('div#pageContent').innerHTML = content;
+
+        addToRoute({
+            pageid: parserOutput.parse.pageid,
+            title: parserOutput.parse.title,
+        });
+
+        scrollToTop();
+
+        if (parserOutput.parse.title === GOAL.title) {
+            success();
+        }
+
+        document.querySelectorAll('div#pageContent a').forEach(x => {
+            x.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                let rawLink;
+                if (ev.target.nodeName === 'A') {
+                    rawLink = ev.target.attributes["href"].value;
+                } else {
+                    rawLink = ev.path[1].attributes["href"].value
+                }
+                getSite(extractLink(rawLink)).then(data => parse(data));
+            })
+        });
+    }
+
+    function scrollToView(link) {
+        document.querySelector(`span${link}`).scrollIntoView();
+    }
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+        })
+    }
+
+    function addToRoute(node) {
+        PATH.push(node);
+        console.log(PATH);
+    }
+
+    function success() {
+        alert('Congratulations! You are done');
+        socket.emit('finished', {
+            sec,
+            PATH,
+        });
+    }
+
+    function timer() {
+        sec = 00;
+
+        window.setInterval(() => {
+            sec++;
+            document.querySelector('header h1#clock').innerHTML = `${("0" + (Math.floor(sec / 60))).slice(-2)}:${("0" + (sec % 60)).slice(-2)}`;
+        }, 1000);
+    }
+
+    function updateUsers(userlist) {
+        let users = userlist.map(x => {
+            console.log(x);
+            return `<li class="user">${x}</li>`;
+        }).join('');
+        document.querySelector('ul.members').innerHTML = users;
+    }
+
+    function updateLobbyLink(id){
+        document.querySelector('p.lobbyInvite').textContent = `${origin}/game/${id}`;
+    }
+
+    function promptUserCredentials(){
+        document.querySelector('div#usercredentials').classList.remove('hidden');
+        document.querySelector('button#training').setAttribute('disabled', true)
+    }
+
+    function showLobbyInfo(){
+        document.querySelector('div.startMenu').classList.add('hidden');
+        document.querySelector('div.lobbyScreen').classList.remove('hidden');
+    }
+
+    function showWikipedia(){
+        document.querySelector('div.individual.centerAll').classList.add('hidden');
+    }
+
+    /*-----------------------------------------------------------------
+    SOCKET.IO
+    -----------------------------------------------------------------*/
+
+    window.addEventListener('load', () => {
+        //TRAINING, play alone
+        document.querySelector('#training').addEventListener('click', () => {
+            timer();
+            socket.emit('startRandom', (options.lang));
+        });
+        //PLAY WITH FRIENDS, play with Friends
+        document.querySelector('#playWithFriends').addEventListener('click', (ev) => {
+
+            promptUserCredentials();
+        })
+
+        document.querySelector('button#confirmUsername').addEventListener('click', ()=>{
+            socket.emit('requestLobby', document.querySelector('input#username').value);
+            showLobbyInfo();
+        })
+
+        //CONFIRM THAT YOU ARE READY
+        document.querySelector('#ready').addEventListener('click', (ev) => {
+            socket.emit('ready', localStorage.getItem('wikirace-id'));
+        })
+    });
+
+    socket.on('connected', () => {
+        console.log('IS CONNECTED');
+        if (localStorage.getItem('wikirace-id')) {
+            socket.emit('lobbyInfo', {
+                id: localStorage.getItem('wikirace-id'),
+                username: localStorage.getItem('wikirace-username')
+            });
+            showLobbyInfo();
+            updateLobbyLink(localStorage.getItem('wikirace-id'));
+        }
+    })
+
+    socket.on('usernames', data => {
+        console.log(data);
+        updateUsers(data);
+    })
+
+    socket.on('lobbyID', (id) => {
+        localStorage.setItem('wikirace-id', `${id}`);
+        updateLobbyLink(id);
+
+    })
+
+    socket.on('gameInfo', (data) => {
+        GOAL = data.article[1];
+        document.querySelector('div#test').innerHTML = `<p>Finde von </p><p class="start instruction">${data.article[0].title}</p><p> zu </p><p class="end instruction">${data.article[1].title}</p>`;
+        parse(data.data);
+        showWikipedia();
+    })
+
+    socket.on('disconnect', () => {
+        localStorage.removeItem('wikirace-id');
+        localStorage.removeItem('wikirace-username');
+    })
+
+</script>
+
+</html>

@@ -1,0 +1,110 @@
+body {
+    background-color: white !important;
+    margin: 1em !important;
+}
+
+
+
+#pageContent {
+    width: 80%;
+    background-color: white;
+}
+
+main {
+    display: flex;
+    position: relative;
+}
+
+aside {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 20%;
+    height: 100vh;
+
+    div.statusBar {
+        padding: 2em;
+    }
+}
+
+.individual{
+
+    header {
+        width: 80%;
+    }
+
+    .lobbyScreen{
+        position: absolute;
+        z-index: 1000;
+        width: 100vw;
+        height: 100vh;
+        background-color: white;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        ul{
+            list-style: none;
+            margin: 0;
+
+            li.user{
+                border: 1px solid black;
+                border-radius: 10px;
+                padding: 0.5em 2em;
+                margin: 0.5em 1em;
+                text-align: center;
+            }
+        }
+
+        button{
+            padding: 0.5em 2em;
+            margin-top: 2em;
+        }
+    }
+    
+    h1 {
+        border: none;
+    }
+    
+    p.instruction {
+        font-size: 1.2em;
+        font-weight: 700;
+    }
+
+    &.centerAll{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100vh;
+    }
+
+    &.startMenu{
+        display: flex;
+        flex-direction: column;
+        min-width: 250px;
+
+        button{
+            margin: 0.5em 1.5em;
+            padding: 0.5em;
+        }
+
+        #usercredentials{
+            display: flex;
+            flex-direction: column;
+            margin-top: 1.5em;
+
+            div{
+                margin-bottom: 0.5em;
+            }
+        }
+    }
+
+
+}
+.hidden{
+    display: none!important;
+}
