@@ -325,7 +325,6 @@
     socket.on('lobbyID', (id) => {
         localStorage.setItem('wikirace-id', `${id}`);
         updateLobbyLink(id);
-
     })
 
     socket.on('gameInfo', (data) => {
