@@ -190,6 +190,10 @@ io.on('connection', (socket) => {
         socket.emit('lobbyID', lobby.id);
     });
 
+    socket.on('checkLobbyID', (id)=>{
+        socket.emit('checkedLobbyID', LOBBIES.hasOwnProperty(id));
+    })
+
     socket.on('ready', (id, username) => {
         LOBBIES[id].setReady(socket);
         console.log("MEMBER LENGTH" + LOBBIES[id].members.size, "READY LENGTH" + LOBBIES[id].ready.size);
